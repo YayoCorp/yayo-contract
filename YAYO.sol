@@ -410,7 +410,7 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
 contract YAYO is Reflect {
     string private constant _name = "YAYO Coin";
     string private constant _symbol = "YAYO";
-    uint8 private constant _decimals = 9;
+    uint8 private constant _decimals = 4;
     uint256 private constant _totalSupply = 69 * 10**6 * 10**_decimals;
     uint256 private constant _redistributionPercent = 5;
 
