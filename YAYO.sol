@@ -279,7 +279,7 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
 
     function excludeAccount(address account) external onlyOwner() {
         require(!_isExcluded[account], "Account is already excluded");
-        if(_rOwned[account] > 0) {
+        if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
         }
         _isExcluded[account] = true;

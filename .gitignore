@@ -1,0 +1,4 @@
+bin
+ignore
+.vscode
+.DS_Store
