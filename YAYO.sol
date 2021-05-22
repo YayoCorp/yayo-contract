@@ -178,7 +178,7 @@ abstract contract Ownable is Context {
     }
 }
 
-abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
+abstract contract Reflectable is IERC20, IERC20Metadata, Ownable {
     using Address for address;
 
     mapping (address => uint256) private _rOwned;
@@ -191,11 +191,13 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _tTotal;
     uint256 private _rTotal;
+    uint256 private immutable _maxTxAmount;
     uint256 private _tFeeTotal;
 
-    constructor (uint256 tTotal_) {
-        _tTotal = tTotal_;
+    constructor (uint256 totalSupply_, uint256 maxTxAmount_) {
+        _tTotal = totalSupply_;
         _rTotal = (MAX - (MAX % _tTotal));
+        _maxTxAmount = maxTxAmount_;
         _rOwned[_msgSender()] = _rTotal;
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -232,7 +234,8 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
+        uint256 currentAllowance = _allowances[_msgSender()][spender];
+        _approve(_msgSender(), spender, currentAllowance + addedValue);
         return true;
     }
 
@@ -311,6 +314,11 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
+
+        if (sender != owner() && recipient != owner()) {
+          require(amount <= _maxTxAmount, "Transfer amount exceeds the maximum transaction amount");
+        }
+
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
@@ -407,14 +415,15 @@ abstract contract Reflect is IERC20, IERC20Metadata, Ownable {
     }
 }
 
-contract YAYO is Reflect {
+contract YAYO is Reflectable {
     string private constant _name = "YAYO Coin";
     string private constant _symbol = "YAYO";
     uint8 private constant _decimals = 4;
     uint256 private constant _totalSupply = 69 * 10**6 * 10**_decimals;
+    uint256 private constant _maxTxAmount = _totalSupply / 100;
     uint256 private constant _redistributionPercent = 5;
 
-    constructor() Reflect(_totalSupply) {}
+    constructor() Reflectable(_totalSupply, _maxTxAmount) {}
 
     function name() public pure override returns (string memory) {
         return _name;
@@ -426,6 +435,10 @@ contract YAYO is Reflect {
 
     function decimals() public pure override returns (uint8) {
         return _decimals;
+    }
+
+    function maxTxAmount() public pure returns (uint256) {
+        return _maxTxAmount;
     }
 
     function calculateFee(uint256 tAmount) internal pure override returns (uint256) {
